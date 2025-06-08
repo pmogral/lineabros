@@ -1,5 +1,5 @@
 # Lineabros - Web3 Gaming on Linea Mainnet
-
+You can play at https://www.lineabros.com/
 A retro-style 2D platformer game integrated with Linea Mainnet blockchain. Players must connect their MetaMask wallet and have at least 30 transactions on Linea Mainnet to play.
 
 ## 🎮 Game Features
