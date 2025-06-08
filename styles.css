@@ -1,0 +1,639 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: #2c3e50;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    font-family: Arial, sans-serif;
+}
+
+.game-container {
+    position: relative;
+}
+
+canvas {
+    background-color: #34495e;
+    border: 4px solid #2c3e50;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+    width: 800px;
+    height: 600px;
+}
+
+.hud {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    color: white;
+    font-size: 24px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.score, .lives {
+    margin-bottom: 10px;
+}
+
+#gameCanvas {
+    display: block;
+    margin: 0 auto;
+    background: #000;
+    position: relative;
+}
+
+/* Fullscreen styles */
+#gameCanvas:fullscreen {
+    width: 100vw;
+    height: 100vh;
+    object-fit: contain;
+}
+
+#gameCanvas:-webkit-full-screen {
+    width: 100vw;
+    height: 100vh;
+    object-fit: contain;
+}
+
+#gameCanvas:-moz-full-screen {
+    width: 100vw;
+    height: 100vh;
+    object-fit: contain;
+}
+
+#gameCanvas:-ms-fullscreen {
+    width: 100vw;
+    height: 100vh;
+    object-fit: contain;
+}
+
+/* Import retro pixel fonts */
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323:wght@400&display=swap');
+
+/* Add a message to show the fullscreen toggle key */
+.fullscreen-hint {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-family: Arial, sans-serif;
+    pointer-events: none;
+    opacity: 0.8;
+    transition: opacity 0.3s;
+}
+
+.fullscreen-hint.hidden {
+    opacity: 0;
+}
+
+.loading-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.loading-content {
+    text-align: center;
+    color: #fff;
+}
+
+.loading-content h1 {
+    font-size: 3em;
+    margin-bottom: 20px;
+    color: #fff;
+}
+
+.progress-bar {
+    width: 300px;
+    height: 20px;
+    background-color: #333;
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 20px auto;
+}
+
+.progress {
+    width: 0%;
+    height: 100%;
+    background-color: #4CAF50;
+    transition: width 0.3s ease-in-out;
+}
+
+.loading-text {
+    font-size: 1.2em;
+    color: #fff;
+}
+
+/* Retro Wallet Screen Styles */
+.wallet-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(45deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    animation: walletScreenFadeIn 0.5s ease-out;
+}
+
+.wallet-screen.hidden {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    z-index: -1 !important;
+}
+
+@keyframes walletScreenFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Animated background stars */
+.wallet-screen::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: 
+        radial-gradient(2px 2px at 20px 30px, #fff, transparent),
+        radial-gradient(2px 2px at 40px 70px, #fff, transparent),
+        radial-gradient(1px 1px at 90px 40px, #fff, transparent),
+        radial-gradient(1px 1px at 130px 80px, #fff, transparent),
+        radial-gradient(2px 2px at 160px 30px, #fff, transparent);
+    background-repeat: repeat;
+    background-size: 200px 100px;
+    animation: twinkle 4s infinite;
+    opacity: 0.6;
+}
+
+@keyframes twinkle {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 0.3; }
+}
+
+.wallet-content {
+    background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+    padding: 1.875rem; /* Reduced by 25% from 2.5rem */
+    border: 4px solid #3498db;
+    border-radius: 0; /* Remove rounded corners for pixel art feel */
+    text-align: center;
+    color: white;
+    max-width: 375px; /* Reduced by 25% from 500px */
+    width: 90%;
+    position: relative;
+    box-shadow: 
+        0 0 0 2px #2c3e50,
+        0 0 0 4px #3498db,
+        0 0 20px rgba(52, 152, 219, 0.3),
+        inset 0 0 20px rgba(0, 0, 0, 0.2);
+    animation: walletContentSlideIn 0.7s ease-out;
+    font-family: 'VT323', monospace;
+}
+
+@keyframes walletContentSlideIn {
+    from { 
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+    to { 
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Pixel art corner decorations */
+.wallet-content::before {
+    content: '';
+    position: absolute;
+    top: -4px;
+    left: -4px;
+    right: -4px;
+    bottom: -4px;
+    background: 
+        linear-gradient(45deg, transparent 0%, transparent 40%, #e74c3c 40%, #e74c3c 60%, transparent 60%),
+        linear-gradient(-45deg, transparent 0%, transparent 40%, #e74c3c 40%, #e74c3c 60%, transparent 60%);
+    background-size: 20px 20px;
+    background-position: 0 0, 0 0;
+    z-index: -1;
+}
+
+.wallet-content h2 {
+    color: #f1c40f;
+    margin-bottom: 20px;
+    font-size: 2.2em;
+    font-family: 'Press Start 2P', monospace;
+    text-shadow: 
+        2px 2px 0px #e67e22,
+        4px 4px 0px #d35400,
+        6px 6px 10px rgba(0, 0, 0, 0.5);
+    animation: titleGlow 2s ease-in-out infinite alternate;
+    letter-spacing: 2px;
+}
+
+@keyframes titleGlow {
+    from { 
+        text-shadow: 
+            2px 2px 0px #e67e22,
+            4px 4px 0px #d35400,
+            6px 6px 10px rgba(0, 0, 0, 0.5);
+    }
+    to { 
+        text-shadow: 
+            2px 2px 0px #e67e22,
+            4px 4px 0px #d35400,
+            6px 6px 10px rgba(0, 0, 0, 0.5),
+            0 0 20px #f1c40f;
+    }
+}
+
+.wallet-content p {
+    margin: 15px 0;
+    line-height: 1.6;
+    font-size: 1.3em;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+}
+
+.connect-button {
+    background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+    color: white;
+    padding: 12px 24px; /* Reduced by 25% from 15px 30px */
+    border: 3px solid #1e8449;
+    border-radius: 0;
+    cursor: pointer;
+    font-size: 1.1em; /* Slightly reduced for smaller panel */
+    font-family: 'Press Start 2P', monospace;
+    margin: 18px 0; /* Reduced by 25% from 25px */
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    position: relative;
+    box-shadow: 
+        0 4px 0 #1e8449,
+        0 8px 15px rgba(0, 0, 0, 0.3);
+    animation: buttonPulse 2s ease-in-out infinite;
+}
+
+@keyframes buttonPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+.connect-button:hover {
+    background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+    transform: translateY(-2px);
+    box-shadow: 
+        0 6px 0 #1e8449,
+        0 10px 20px rgba(0, 0, 0, 0.4);
+}
+
+.connect-button:active {
+    transform: translateY(2px);
+    box-shadow: 
+        0 2px 0 #1e8449,
+        0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.network-info {
+    color: #f39c12;
+    margin: 15px 0;
+    font-size: 1.1em;
+    background: rgba(243, 156, 18, 0.1);
+    padding: 10px;
+    border: 2px dashed #f39c12;
+    animation: warningBlink 1.5s ease-in-out infinite;
+}
+
+@keyframes warningBlink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+.wallet-status {
+    margin-top: 15px;
+    font-size: 1.1em;
+    color: #bdc3c7;
+    font-family: 'VT323', monospace;
+}
+
+.network-warning, .transaction-warning {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    padding: 20px;
+    border: 3px solid #a93226;
+    margin: 20px 0;
+    position: relative;
+    box-shadow: 
+        0 4px 0 #a93226,
+        0 8px 15px rgba(0, 0, 0, 0.3);
+    animation: errorShake 0.5s ease-in-out;
+}
+
+@keyframes errorShake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+.network-warning p, .transaction-warning p {
+    margin: 8px 0;
+    color: white;
+    font-size: 1.1em;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+}
+
+/* Pixel art loading dots animation */
+.wallet-status.loading::after {
+    content: '';
+    display: inline-block;
+    width: 20px;
+    height: 4px;
+    background: linear-gradient(90deg, 
+        #3498db 0%, #3498db 25%, 
+        transparent 25%, transparent 50%, 
+        #3498db 50%, #3498db 75%, 
+        transparent 75%, transparent 100%);
+    background-size: 8px 4px;
+    animation: loadingDots 1s infinite;
+    margin-left: 10px;
+}
+
+@keyframes loadingDots {
+    0% { background-position: 0 0; }
+    100% { background-position: 8px 0; }
+}
+
+/* Enhanced Retro Wallet Elements */
+.retro-header {
+    margin-bottom: 18px; /* Reduced by 25% from 25px */
+    position: relative;
+}
+
+.pixel-line {
+    height: 4px;
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        #3498db 10%, 
+        #e74c3c 20%, 
+        #f1c40f 30%, 
+        #2ecc71 40%, 
+        #9b59b6 50%, 
+        #2ecc71 60%, 
+        #f1c40f 70%, 
+        #e74c3c 80%, 
+        #3498db 90%, 
+        transparent 100%);
+    margin: 10px 0;
+    animation: pixelLineFlow 3s linear infinite;
+}
+
+@keyframes pixelLineFlow {
+    0% { background-position: 0% 0%; }
+    100% { background-position: 100% 0%; }
+}
+
+.game-info {
+    margin: 15px 0; /* Reduced by 25% from 20px */
+}
+
+.main-text {
+    font-size: 1.4em;
+    color: #f1c40f;
+    font-family: 'Press Start 2P', monospace;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 0px #e67e22;
+    animation: textFlicker 2s ease-in-out infinite alternate;
+}
+
+@keyframes textFlicker {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.8; }
+}
+
+.sub-text {
+    font-size: 1.1em;
+    color: #bdc3c7;
+    margin-bottom: 15px;
+}
+
+.requirements-box {
+    background: linear-gradient(135deg, #1a252f 0%, #2c3e50 100%);
+    border: 2px solid #3498db;
+    padding: 15px; /* Reduced by 25% from 20px */
+    margin: 15px 0; /* Reduced by 25% from 20px */
+    position: relative;
+    box-shadow: 
+        inset 0 0 20px rgba(0, 0, 0, 0.3),
+        0 0 15px rgba(52, 152, 219, 0.2);
+}
+
+.requirements-box::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(45deg, #3498db, #e74c3c, #f1c40f, #2ecc71);
+    background-size: 400% 400%;
+    z-index: -1;
+    animation: borderGlow 4s ease infinite;
+}
+
+@keyframes borderGlow {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+
+.req-header {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.9em; /* Slightly reduced for smaller panel */
+    color: #f1c40f;
+    text-align: center;
+    margin-bottom: 12px; /* Reduced by 25% from 15px */
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+}
+
+.req-item {
+    font-size: 1.1em;
+    color: #ecf0f1;
+    margin: 8px 0;
+    padding: 5px 0;
+    border-bottom: 1px dashed #34495e;
+    transition: color 0.3s ease;
+}
+
+.req-item:hover {
+    color: #3498db;
+}
+
+.req-item:last-child {
+    border-bottom: none;
+}
+
+.button-text {
+    position: relative;
+    z-index: 2;
+}
+
+.button-glow {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transform: translateX(-100%);
+    transition: transform 0.6s;
+}
+
+.connect-button:hover .button-glow {
+    transform: translateX(100%);
+}
+
+.warning-header {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 1.1em;
+    margin-bottom: 15px;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+    animation: warningFlash 1s ease-in-out infinite alternate;
+}
+
+@keyframes warningFlash {
+    0% { opacity: 1; }
+    100% { opacity: 0.7; }
+}
+
+.tx-count {
+    font-family: 'VT323', monospace;
+    font-size: 1.2em;
+    margin: 10px 0;
+}
+
+.help-text {
+    font-size: 1em;
+    color: #f39c12;
+    margin-top: 15px;
+    padding: 10px;
+    background: rgba(243, 156, 18, 0.1);
+    border: 1px dashed #f39c12;
+}
+
+.retro-footer {
+    margin-top: 18px; /* Reduced by 25% from 25px */
+    padding-top: 12px; /* Reduced by 25% from 15px */
+}
+
+.footer-text {
+    font-size: 0.9em;
+    color: #7f8c8d;
+    font-family: 'VT323', monospace;
+    letter-spacing: 1px;
+}
+
+.connect-button:disabled {
+    background: linear-gradient(135deg, #7f8c8d 0%, #95a5a6 100%);
+    border-color: #5d6d7e;
+    cursor: not-allowed;
+    animation: none;
+    box-shadow: 
+        0 2px 0 #5d6d7e,
+        0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.success-message {
+    background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+    color: white;
+    padding: 8.44px; /* Reduced by additional 25% from 11.25px */
+    border: 3px solid #1e8449;
+    margin: 8.44px 0; /* Reduced by additional 25% from 11.25px */
+    font-family: 'VT323', monospace;
+    font-size: 0.675em; /* Reduced by additional 25% from 0.9em */
+    box-shadow: 
+        0 4px 0 #1e8449,
+        0 8px 15px rgba(0, 0, 0, 0.3);
+    animation: successPulse 1s ease-in-out;
+}
+
+@keyframes successPulse {
+    0% { transform: scale(0.9); opacity: 0; }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.error-message {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    color: white;
+    padding: 8.44px; /* Reduced by additional 25% from 11.25px */
+    border: 3px solid #a93226;
+    margin: 8.44px 0; /* Reduced by additional 25% from 11.25px */
+    font-family: 'VT323', monospace;
+    font-size: 0.675em; /* Reduced by additional 25% from 0.9em */
+    box-shadow: 
+        0 4px 0 #a93226,
+        0 8px 15px rgba(0, 0, 0, 0.3);
+    animation: errorShake 0.5s ease-in-out;
+}
+
+.wallet-info {
+    background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
+    padding: 8.44px; /* Reduced by additional 25% from 11.25px */
+    border: 2px solid #3498db;
+    margin: 8.44px 0; /* Reduced by additional 25% from 11.25px */
+    font-family: 'VT323', monospace;
+    font-size: 0.619em; /* Reduced by additional 25% from 0.825em */
+    color: #ecf0f1;
+    box-shadow: 
+        inset 0 0 10px rgba(0, 0, 0, 0.3),
+        0 0 10px rgba(52, 152, 219, 0.2);
+}
+
+.continue-button {
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    color: white;
+    padding: 8.44px 16.88px; /* Reduced by additional 25% from 11.25px 22.5px */
+    border: 3px solid #1f4e79;
+    border-radius: 0;
+    cursor: pointer;
+    font-size: 0.675em; /* Reduced by additional 25% from 0.9em */
+    font-family: 'Press Start 2P', monospace;
+    margin: 14.06px 0; /* Reduced by additional 25% from 18.75px */
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 
+        0 4px 0 #1f4e79,
+        0 8px 15px rgba(0, 0, 0, 0.3);
+}
+
+.continue-button:hover {
+    background: linear-gradient(135deg, #2980b9 0%, #3498db 100%);
+    transform: translateY(-2px);
+    box-shadow: 
+        0 6px 0 #1f4e79,
+        0 10px 20px rgba(0, 0, 0, 0.4);
+}
+
+.continue-button:active {
+    transform: translateY(2px);
+    box-shadow: 
+        0 2px 0 #1f4e79,
+        0 4px 10px rgba(0, 0, 0, 0.3);
+} 

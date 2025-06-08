@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linea Kang Music Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #2c3e50;
+            color: white;
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .music-controls {
+            background: #34495e;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+        button {
+            margin: 10px;
+            padding: 15px 30px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #2980b9;
+        }
+        button.active {
+            background: #e74c3c;
+        }
+        .status {
+            margin: 20px 0;
+            padding: 15px;
+            background: #2c3e50;
+            border-radius: 8px;
+        }
+        .character-info {
+            display: flex;
+            justify-content: space-around;
+            margin: 30px 0;
+        }
+        .char-box {
+            background: #2c3e50;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            min-width: 150px;
+        }
+        .char-box.active {
+            background: #e74c3c;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎵 Linea Kang Music Integration Test</h1>
+        
+        <div class="music-controls">
+            <h3>Character Music Test</h3>
+            <p>Click on a character to test their specific background music:</p>
+            
+            <div class="character-info">
+                <div class="char-box" id="char0">
+                    <h4>Linea Kang</h4>
+                    <p>Custom Music</p>
+                    <button onclick="testCharacterMusic(0)">Play Linea Kang Music</button>
+                </div>
+                <div class="char-box" id="char1">
+                    <h4>MetaFox</h4>
+                    <p>Default Music</p>
+                    <button onclick="testCharacterMusic(1)">Play MetaFox Music</button>
+                </div>
+                <div class="char-box" id="char2">
+                    <h4>E-Frogs</h4>
+                    <p>Custom Music</p>
+                    <button onclick="testCharacterMusic(2)">Play E-Frogs Music</button>
+                </div>
+                <div class="char-box" id="char3">
+                    <h4>Foxy</h4>
+                    <p>Default Music</p>
+                    <button onclick="testCharacterMusic(3)">Play Foxy Music</button>
+                </div>
+            </div>
+            
+            <button onclick="stopAllMusic()">Stop All Music</button>
+            <button onclick="toggleMute()">Toggle Mute</button>
+        </div>
+
+        <div class="status">
+            <h4>Status:</h4>
+            <p id="statusText">Ready to test music</p>
+            <p id="currentMusic">No music playing</p>
+        </div>
+
+        <div class="status">
+            <h4>Audio Files Status:</h4>
+            <p id="audioStatus">Loading audio files...</p>
+        </div>
+    </div>
+
+    <script src="js/audio.js"></script>
+    <script>
+        let audioManager;
+        let currentCharacter = -1;
+
+        // Initialize audio manager
+        document.addEventListener('DOMContentLoaded', () => {
+            audioManager = new AudioManager();
+            
+            // Initialize audio on first user interaction
+            document.addEventListener('click', () => {
+                if (!audioManager.audioInitialized) {
+                    audioManager.initializeAudio();
+                    updateStatus('Audio system initialized');
+                }
+            }, { once: true });
+
+            // Check audio loading status
+            checkAudioStatus();
+        });
+
+        function testCharacterMusic(characterIndex) {
+            if (!audioManager.audioInitialized) {
+                audioManager.initializeAudio();
+            }
+
+            // Update UI
+            document.querySelectorAll('.char-box').forEach(box => box.classList.remove('active'));
+            document.getElementById(`char${characterIndex}`).classList.add('active');
+            
+            currentCharacter = characterIndex;
+            
+            // Play character-specific music
+            audioManager.playBackgroundMusic(characterIndex);
+            
+            const characterNames = ['Linea Kang', 'MetaFox', 'E-Frogs', 'Foxy'];
+            updateStatus(`Playing music for ${characterNames[characterIndex]}`);
+            updateCurrentMusic(`${characterNames[characterIndex]} music`);
+        }
+
+        function stopAllMusic() {
+            audioManager.stopAllMusic();
+            document.querySelectorAll('.char-box').forEach(box => box.classList.remove('active'));
+            currentCharacter = -1;
+            updateStatus('All music stopped');
+            updateCurrentMusic('No music playing');
+        }
+
+        function toggleMute() {
+            audioManager.toggleMute();
+            updateStatus(audioManager.isMuted ? 'Music muted' : 'Music unmuted');
+        }
+
+        function updateStatus(message) {
+            document.getElementById('statusText').textContent = message;
+        }
+
+        function updateCurrentMusic(music) {
+            document.getElementById('currentMusic').textContent = `Current: ${music}`;
+        }
+
+        function checkAudioStatus() {
+            const checkLoading = () => {
+                const bgLoaded = audioManager.backgroundMusic.readyState >= 3;
+                const efrogsLoaded = audioManager.efrogsMusic.readyState >= 3;
+                const lineaLoaded = audioManager.lineaKangMusic.readyState >= 3;
+                
+                let status = 'Audio Loading Status:\n';
+                status += `• Background Music: ${bgLoaded ? '✅ Loaded' : '⏳ Loading...'}\n`;
+                status += `• E-Frogs Music: ${efrogsLoaded ? '✅ Loaded' : '⏳ Loading...'}\n`;
+                status += `• Linea Kang Music: ${lineaLoaded ? '✅ Loaded' : '⏳ Loading...'}\n`;
+                
+                document.getElementById('audioStatus').innerHTML = status.replace(/\n/g, '<br>');
+                
+                if (!bgLoaded || !efrogsLoaded || !lineaLoaded) {
+                    setTimeout(checkLoading, 1000);
+                } else {
+                    document.getElementById('audioStatus').innerHTML = 
+                        '✅ All audio files loaded successfully!<br>' +
+                        '🎵 Linea Kang music integration complete!';
+                }
+            };
+            
+            setTimeout(checkLoading, 500);
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            switch(e.key) {
+                case '1': testCharacterMusic(0); break;
+                case '2': testCharacterMusic(1); break;
+                case '3': testCharacterMusic(2); break;
+                case '4': testCharacterMusic(3); break;
+                case ' ': e.preventDefault(); stopAllMusic(); break;
+                case 'm': toggleMute(); break;
+            }
+        });
+    </script>
+</body>
+</html> 

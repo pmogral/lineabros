@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movement Responsiveness Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #2c3e50;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        canvas {
+            border: 2px solid #3498db;
+            background: #34495e;
+            display: block;
+            margin: 20px auto;
+        }
+        .controls {
+            text-align: center;
+            margin: 20px;
+        }
+        button {
+            margin: 5px;
+            padding: 10px 20px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #2980b9;
+        }
+        button.active {
+            background: #e74c3c;
+        }
+        .info {
+            background: #34495e;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .performance-stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+        }
+        .stat-box {
+            background: #2c3e50;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 style="text-align: center;">Movement Responsiveness Test</h1>
+        
+        <div class="info">
+            <h3>Instructions:</h3>
+            <p>Use ← → arrow keys to move the characters. Compare the responsiveness between Linea Kang and other characters.</p>
+            <p>The test measures input lag and movement smoothness.</p>
+        </div>
+
+        <div class="controls">
+            <button id="lineaBtn" onclick="switchCharacter(0)" class="active">Linea Kang (Sprite)</button>
+            <button id="metaBtn" onclick="switchCharacter(1)">MetaFox (Normal)</button>
+            <button id="frogBtn" onclick="switchCharacter(2)">E-Frogs (Normal)</button>
+            <button id="foxyBtn" onclick="switchCharacter(3)">Foxy (Normal)</button>
+        </div>
+
+        <canvas id="testCanvas" width="800" height="400"></canvas>
+
+        <div class="performance-stats">
+            <div class="stat-box">
+                <h4>Current Character</h4>
+                <p id="currentChar">Linea Kang</p>
+            </div>
+            <div class="stat-box">
+                <h4>Frame Rate</h4>
+                <p id="frameRate">60 FPS</p>
+            </div>
+            <div class="stat-box">
+                <h4>Input Lag</h4>
+                <p id="inputLag">0ms</p>
+            </div>
+            <div class="stat-box">
+                <h4>Animation Type</h4>
+                <p id="animType">Sprite Sheet</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('testCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Character data
+        const characters = [
+            { name: 'Linea Kang', src: 'images/imageslinea-kang-spritesheet.webp', isSprite: true },
+            { name: 'MetaFox', src: 'images/MetaFox.webp', isSprite: false },
+            { name: 'E-Frogs', src: 'images/E-Frogs.webp', isSprite: false },
+            { name: 'Foxy', src: 'images/Foxy.webp', isSprite: false }
+        ];
+        
+        // Game state
+        let currentCharacterIndex = 0;
+        let characterImages = [];
+        let imagesLoaded = 0;
+        
+        // Player state
+        let playerX = 350;
+        let playerY = 200;
+        let velocityX = 0;
+        let direction = 1;
+        let isMoving = false;
+        
+        // Sprite animation state (for Linea Kang)
+        let currentSpriteFrame = 0;
+        let runningFrameCounter = 0;
+        let lastAnimationTime = 0;
+        let spriteFrameWidth = 0;
+        let spriteFrameHeight = 0;
+        
+        // Performance tracking
+        let frameCount = 0;
+        let lastFrameTime = Date.now();
+        let inputTimes = [];
+        
+        // Input handling
+        const keys = {};
+        
+        // Load all character images
+        characters.forEach((char, index) => {
+            const img = new Image();
+            img.onload = () => {
+                characterImages[index] = img;
+                imagesLoaded++;
+                if (index === 0) { // Linea Kang
+                    spriteFrameWidth = img.width / 2;
+                    spriteFrameHeight = img.height / 2;
+                }
+                if (imagesLoaded === characters.length) {
+                    startTest();
+                }
+            };
+            img.src = char.src;
+        });
+        
+        function startTest() {
+            gameLoop();
+        }
+        
+        function switchCharacter(index) {
+            currentCharacterIndex = index;
+            
+            // Update button states
+            document.querySelectorAll('.controls button').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.controls button')[index].classList.add('active');
+            
+            // Update UI
+            document.getElementById('currentChar').textContent = characters[index].name;
+            document.getElementById('animType').textContent = characters[index].isSprite ? 'Sprite Sheet' : 'Single Image';
+            
+            // Reset animation state
+            currentSpriteFrame = 0;
+            runningFrameCounter = 0;
+            lastAnimationTime = 0;
+        }
+        
+        function handleInput() {
+            const inputStartTime = Date.now();
+            
+            if (keys['ArrowLeft']) {
+                velocityX = -5; // Same speed as game
+                direction = -1;
+                isMoving = true;
+                inputTimes.push(inputStartTime);
+            } else if (keys['ArrowRight']) {
+                velocityX = 5; // Same speed as game
+                direction = 1;
+                isMoving = true;
+                inputTimes.push(inputStartTime);
+            } else {
+                velocityX = 0;
+                isMoving = false;
+            }
+        }
+        
+        function updateSpriteAnimation() {
+            if (currentCharacterIndex !== 0) return; // Only for Linea Kang
+            
+            if (isMoving) {
+                const currentTime = Date.now();
+                
+                // Start with running frame immediately when walking starts
+                if (currentSpriteFrame === 0) {
+                    currentSpriteFrame = 2;
+                    lastAnimationTime = currentTime;
+                    runningFrameCounter = 0;
+                }
+                
+                // Faster animation cycling - 120ms for smoother feel
+                if (currentTime - lastAnimationTime > 120) {
+                    runningFrameCounter++;
+                    currentSpriteFrame = 2 + (runningFrameCounter % 2);
+                    lastAnimationTime = currentTime;
+                }
+            } else {
+                currentSpriteFrame = 0;
+                runningFrameCounter = 0;
+            }
+        }
+        
+        function update() {
+            handleInput();
+            
+            // Update sprite animation
+            updateSpriteAnimation();
+            
+            // Update position
+            playerX += velocityX;
+            
+            // Apply friction (same as game)
+            if (velocityX !== 0) {
+                velocityX *= 0.9;
+                if (Math.abs(velocityX) < 0.05) { // More responsive threshold
+                    velocityX = 0;
+                }
+            }
+            
+            // Update movement state based on velocity
+            isMoving = Math.abs(velocityX) > 0.05;
+            
+            // Screen boundaries
+            if (playerX < 0) playerX = 0;
+            if (playerX > canvas.width - 100) playerX = canvas.width - 100;
+        }
+        
+        function draw() {
+            // Clear canvas
+            ctx.fillStyle = '#34495e';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw ground
+            ctx.fillStyle = '#8B4513';
+            ctx.fillRect(0, canvas.height - 50, canvas.width, 50);
+            
+            const currentChar = characters[currentCharacterIndex];
+            const img = characterImages[currentCharacterIndex];
+            
+            if (img) {
+                ctx.save();
+                
+                if (currentChar.isSprite && currentCharacterIndex === 0) {
+                    // Draw sprite sheet frame
+                    const col = currentSpriteFrame % 2;
+                    const row = Math.floor(currentSpriteFrame / 2);
+                    const sourceX = col * spriteFrameWidth;
+                    const sourceY = row * spriteFrameHeight;
+                    
+                    if (direction === 1) {
+                        ctx.drawImage(img, sourceX, sourceY, spriteFrameWidth, spriteFrameHeight, 
+                                     playerX, playerY, 100, 100);
+                    } else {
+                        ctx.translate(playerX + 100, playerY);
+                        ctx.scale(-1, 1);
+                        ctx.drawImage(img, sourceX, sourceY, spriteFrameWidth, spriteFrameHeight, 
+                                     0, 0, 100, 100);
+                    }
+                } else {
+                    // Draw normal image
+                    if (direction === 1) {
+                        ctx.drawImage(img, playerX, playerY, 100, 100);
+                    } else {
+                        ctx.translate(playerX + 100, playerY);
+                        ctx.scale(-1, 1);
+                        ctx.drawImage(img, 0, 0, 100, 100);
+                    }
+                }
+                
+                ctx.restore();
+            }
+            
+            // Draw movement indicator
+            if (isMoving) {
+                ctx.fillStyle = '#e74c3c';
+                ctx.fillRect(playerX + 45, playerY - 20, 10, 10);
+            }
+        }
+        
+        function updatePerformanceStats() {
+            frameCount++;
+            const currentTime = Date.now();
+            
+            if (currentTime - lastFrameTime >= 1000) {
+                const fps = Math.round(frameCount * 1000 / (currentTime - lastFrameTime));
+                document.getElementById('frameRate').textContent = fps + ' FPS';
+                frameCount = 0;
+                lastFrameTime = currentTime;
+            }
+            
+            // Calculate average input lag
+            if (inputTimes.length > 0) {
+                const avgLag = inputTimes.reduce((sum, time) => sum + (Date.now() - time), 0) / inputTimes.length;
+                document.getElementById('inputLag').textContent = Math.round(avgLag) + 'ms';
+                
+                // Keep only recent input times
+                if (inputTimes.length > 10) {
+                    inputTimes = inputTimes.slice(-5);
+                }
+            }
+        }
+        
+        function gameLoop() {
+            update();
+            draw();
+            updatePerformanceStats();
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // Event listeners
+        window.addEventListener('keydown', (e) => {
+            keys[e.key] = true;
+        });
+        
+        window.addEventListener('keyup', (e) => {
+            keys[e.key] = false;
+        });
+        
+        // Instructions
+        document.addEventListener('DOMContentLoaded', () => {
+            const instructions = document.createElement('div');
+            instructions.style.cssText = 'position: fixed; top: 10px; right: 10px; background: rgba(0,0,0,0.8); padding: 10px; border-radius: 5px; font-size: 12px;';
+            instructions.innerHTML = 'Use ← → arrow keys to move<br>Compare responsiveness between characters';
+            document.body.appendChild(instructions);
+        });
+    </script>
+</body>
+</html> 

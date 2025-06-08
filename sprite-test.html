@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linea Kang Sprite Sheet Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #2c3e50;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        canvas {
+            border: 2px solid #3498db;
+            background: #34495e;
+            display: block;
+            margin: 20px auto;
+        }
+        .controls {
+            text-align: center;
+            margin: 20px;
+        }
+        button {
+            margin: 5px;
+            padding: 10px 20px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #2980b9;
+        }
+        .info {
+            text-align: center;
+            margin: 20px;
+        }
+        .frame-info {
+            background: #34495e;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px auto;
+            max-width: 600px;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="text-align: center;">Linea Kang Sprite Sheet Animation Test</h1>
+    
+    <div class="info">
+        <div class="frame-info">
+            <h3>Sprite Sheet Layout</h3>
+            <p><strong>Frame 1 (Index 0):</strong> Idle position - Default standing pose</p>
+            <p><strong>Frame 2 (Index 1):</strong> Jumping - Character in mid-air pose</p>
+            <p><strong>Frame 3 (Index 2):</strong> Running 1 - First running animation frame</p>
+            <p><strong>Frame 4 (Index 3):</strong> Running 2 - Second running animation frame</p>
+        </div>
+    </div>
+    
+    <canvas id="spriteCanvas" width="800" height="400"></canvas>
+    
+    <div class="controls">
+        <button onclick="setFrame(0)">Idle (Frame 1)</button>
+        <button onclick="setFrame(1)">Jump (Frame 2)</button>
+        <button onclick="setFrame(2)">Run 1 (Frame 3)</button>
+        <button onclick="setFrame(3)">Run 2 (Frame 4)</button>
+        <button onclick="toggleRunning()">Toggle Running Animation</button>
+        <button onclick="toggleDirection()">Flip Direction</button>
+    </div>
+    
+    <div class="info">
+        <p id="currentFrame">Current Frame: 0 (Idle)</p>
+        <p id="direction">Direction: Right</p>
+        <p id="animationStatus">Animation: Stopped</p>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('spriteCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Sprite sheet properties
+        let spriteImage = new Image();
+        let imageLoaded = false;
+        let currentFrame = 0;
+        let facingRight = true;
+        let isRunning = false;
+        let runningFrame = 0;
+        let lastFrameTime = 0;
+        
+        // Character properties
+        const charX = 350;
+        const charY = 200;
+        const charWidth = 100;
+        const charHeight = 100;
+        
+        // Frame descriptions
+        const frameDescriptions = [
+            "Idle",
+            "Jump", 
+            "Run 1",
+            "Run 2"
+        ];
+        
+        // Load sprite sheet (placeholder - you'll replace with actual sprite sheet)
+        spriteImage.onload = function() {
+            imageLoaded = true;
+            draw();
+        };
+        
+        // Load your actual sprite sheet
+        spriteImage.src = 'images/imageslinea-kang-spritesheet.webp';
+        
+        // Fallback to placeholder if the actual sprite sheet fails to load
+        spriteImage.onerror = function() {
+            console.log('Failed to load actual sprite sheet, using placeholder');
+            createPlaceholderSpriteSheet();
+        };
+        
+        function createPlaceholderSpriteSheet() {
+            // Create a placeholder sprite sheet for demonstration
+            const placeholderCanvas = document.createElement('canvas');
+            placeholderCanvas.width = 400; // 4 frames * 100px each
+            placeholderCanvas.height = 100;
+            const placeholderCtx = placeholderCanvas.getContext('2d');
+            
+            // Draw 4 different colored rectangles to represent frames
+            const colors = ['#e74c3c', '#f39c12', '#2ecc71', '#9b59b6'];
+            const labels = ['IDLE', 'JUMP', 'RUN1', 'RUN2'];
+            
+            for (let i = 0; i < 4; i++) {
+                placeholderCtx.fillStyle = colors[i];
+                placeholderCtx.fillRect(i * 100, 0, 100, 100);
+                
+                placeholderCtx.fillStyle = 'white';
+                placeholderCtx.font = '12px Arial';
+                placeholderCtx.textAlign = 'center';
+                placeholderCtx.fillText(labels[i], i * 100 + 50, 50);
+                
+                // Draw a simple character shape
+                placeholderCtx.fillStyle = '#f4d03f';
+                placeholderCtx.fillRect(i * 100 + 30, 20, 40, 60);
+                placeholderCtx.fillStyle = '#8b4513';
+                placeholderCtx.fillRect(i * 100 + 35, 25, 30, 30);
+            }
+            
+            spriteImage.src = placeholderCanvas.toDataURL();
+        }
+        
+        function draw() {
+            // Clear canvas
+            ctx.fillStyle = '#34495e';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            if (!imageLoaded) return;
+            
+            // Calculate source rectangle for current frame
+            const frameWidth = spriteImage.width / 4; // 4 frames
+            const frameHeight = spriteImage.height;
+            const sourceX = currentFrame * frameWidth;
+            const sourceY = 0;
+            
+            ctx.save();
+            
+            if (facingRight) {
+                // Draw normally
+                ctx.drawImage(
+                    spriteImage,
+                    sourceX, sourceY, frameWidth, frameHeight,
+                    charX, charY, charWidth, charHeight
+                );
+            } else {
+                // Flip horizontally
+                ctx.translate(charX + charWidth, charY);
+                ctx.scale(-1, 1);
+                ctx.drawImage(
+                    spriteImage,
+                    sourceX, sourceY, frameWidth, frameHeight,
+                    0, 0, charWidth, charHeight
+                );
+            }
+            
+            ctx.restore();
+            
+            // Draw frame indicator
+            ctx.fillStyle = 'white';
+            ctx.font = '16px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(`Frame ${currentFrame + 1}: ${frameDescriptions[currentFrame]}`, canvas.width / 2, 50);
+        }
+        
+        function setFrame(frame) {
+            currentFrame = frame;
+            isRunning = false;
+            updateUI();
+            draw();
+        }
+        
+        function toggleRunning() {
+            isRunning = !isRunning;
+            if (isRunning) {
+                runningFrame = 0;
+                animate();
+            }
+            updateUI();
+        }
+        
+        function toggleDirection() {
+            facingRight = !facingRight;
+            updateUI();
+            draw();
+        }
+        
+        function animate() {
+            if (!isRunning) return;
+            
+            const currentTime = Date.now();
+            if (currentTime - lastFrameTime > 300) { // Change frame every 300ms
+                runningFrame = (runningFrame + 1) % 2;
+                currentFrame = 2 + runningFrame; // Alternate between frames 2 and 3
+                lastFrameTime = currentTime;
+                draw();
+                updateUI();
+            }
+            
+            requestAnimationFrame(animate);
+        }
+        
+        function updateUI() {
+            document.getElementById('currentFrame').textContent = 
+                `Current Frame: ${currentFrame} (${frameDescriptions[currentFrame]})`;
+            document.getElementById('direction').textContent = 
+                `Direction: ${facingRight ? 'Right' : 'Left'}`;
+            document.getElementById('animationStatus').textContent = 
+                `Animation: ${isRunning ? 'Running' : 'Stopped'}`;
+        }
+        
+        // Initial draw
+        updateUI();
+    </script>
+</body>
+</html> 

@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sprite Sheet Frame Debugger</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #2c3e50;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .frame-display {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        .frame-box {
+            background: #34495e;
+            border: 2px solid #3498db;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px;
+            text-align: center;
+            min-width: 200px;
+        }
+        .frame-box.active {
+            border-color: #e74c3c;
+            background: #2c3e50;
+        }
+        canvas {
+            border: 2px solid #3498db;
+            background: #34495e;
+            display: block;
+            margin: 10px auto;
+        }
+        button {
+            margin: 5px;
+            padding: 10px 20px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        button:hover {
+            background: #2980b9;
+        }
+        button.active {
+            background: #e74c3c;
+        }
+        .controls {
+            text-align: center;
+            margin: 20px;
+        }
+        .info {
+            background: #34495e;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .mapping-controls {
+            background: #2c3e50;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .mapping-row {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            justify-content: space-between;
+        }
+        select {
+            padding: 5px 10px;
+            background: #34495e;
+            color: white;
+            border: 1px solid #3498db;
+            border-radius: 5px;
+        }
+        .current-mapping {
+            background: #27ae60;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 style="text-align: center;">Linea Kang Sprite Sheet Frame Debugger</h1>
+        
+        <div class="info">
+            <h3>Instructions:</h3>
+            <p>1. Look at each frame below and identify what animation it represents</p>
+            <p>2. Use the mapping controls to assign the correct frame to each animation state</p>
+            <p>3. Test the mapping with the preview buttons</p>
+            <p>4. Copy the corrected code when you're satisfied</p>
+        </div>
+
+        <div class="frame-display">
+            <div class="frame-box" id="frame0">
+                <h4>Top Left (Index 0)</h4>
+                <canvas id="canvas0" width="120" height="120"></canvas>
+                <p>Should be: <strong>Idle</strong></p>
+                <p>Currently mapped to: <span id="mapping0">Idle</span></p>
+            </div>
+            <div class="frame-box" id="frame1">
+                <h4>Top Right (Index 1)</h4>
+                <canvas id="canvas1" width="120" height="120"></canvas>
+                <p>Should be: <strong>Jumping</strong></p>
+                <p>Currently mapped to: <span id="mapping1">Jumping</span></p>
+            </div>
+            <div class="frame-box" id="frame2">
+                <h4>Bottom Left (Index 2)</h4>
+                <canvas id="canvas2" width="120" height="120"></canvas>
+                <p>Should be: <strong>Running 1</strong></p>
+                <p>Currently mapped to: <span id="mapping2">Running 1</span></p>
+            </div>
+            <div class="frame-box" id="frame3">
+                <h4>Bottom Right (Index 3)</h4>
+                <canvas id="canvas3" width="120" height="120"></canvas>
+                <p>Should be: <strong>Running 2</strong></p>
+                <p>Currently mapped to: <span id="mapping3">Running 2</span></p>
+            </div>
+        </div>
+
+        <div class="mapping-controls">
+            <h3>Frame Mapping Configuration</h3>
+            <div class="mapping-row">
+                <label>Idle Animation should use Frame:</label>
+                <select id="idleFrame">
+                    <option value="0">Frame 1 (Index 0)</option>
+                    <option value="1">Frame 2 (Index 1)</option>
+                    <option value="2">Frame 3 (Index 2)</option>
+                    <option value="3">Frame 4 (Index 3)</option>
+                </select>
+            </div>
+            <div class="mapping-row">
+                <label>Jumping Animation should use Frame:</label>
+                <select id="jumpFrame">
+                    <option value="0">Frame 1 (Index 0)</option>
+                    <option value="1" selected>Frame 2 (Index 1)</option>
+                    <option value="2">Frame 3 (Index 2)</option>
+                    <option value="3">Frame 4 (Index 3)</option>
+                </select>
+            </div>
+            <div class="mapping-row">
+                <label>Running Frame 1 should use Frame:</label>
+                <select id="run1Frame">
+                    <option value="0">Frame 1 (Index 0)</option>
+                    <option value="1">Frame 2 (Index 1)</option>
+                    <option value="2" selected>Frame 3 (Index 2)</option>
+                    <option value="3">Frame 4 (Index 3)</option>
+                </select>
+            </div>
+            <div class="mapping-row">
+                <label>Running Frame 2 should use Frame:</label>
+                <select id="run2Frame">
+                    <option value="0">Frame 1 (Index 0)</option>
+                    <option value="1">Frame 2 (Index 1)</option>
+                    <option value="2">Frame 3 (Index 2)</option>
+                    <option value="3" selected>Frame 4 (Index 3)</option>
+                </select>
+            </div>
+            <button onclick="updateMapping()">Update Mapping</button>
+        </div>
+
+        <div class="controls">
+            <h3>Test Animation States</h3>
+            <button id="idleBtn" onclick="testState('idle')" class="active">Test Idle</button>
+            <button id="jumpBtn" onclick="testState('jump')">Test Jump</button>
+            <button id="runBtn" onclick="testState('run')">Test Running</button>
+            <button onclick="toggleDirection()">Flip Direction</button>
+        </div>
+
+        <div class="current-mapping" id="currentMapping">
+            <h3>Current Mapping (Copy this to fix your code):</h3>
+            <pre id="codeOutput"></pre>
+        </div>
+
+        <canvas id="testCanvas" width="400" height="200" style="border: 3px solid #e74c3c;"></canvas>
+        <p style="text-align: center;">Test Canvas - Shows current animation state</p>
+    </div>
+
+    <script>
+        let spriteImage = new Image();
+        let imageLoaded = false;
+        let frameWidth = 0;
+        let frameHeight = 0;
+        let currentTestState = 'idle';
+        let facingRight = true;
+        let runningFrame = 0;
+        let lastFrameTime = 0;
+        let animationRunning = false;
+
+        // Current frame mapping
+        let frameMapping = {
+            idle: 0,
+            jump: 1,
+            run1: 2,
+            run2: 3
+        };
+
+        spriteImage.onload = function() {
+            imageLoaded = true;
+            frameWidth = spriteImage.width / 2;  // 2 columns
+            frameHeight = spriteImage.height / 2; // 2 rows
+            drawAllFrames();
+            updateTestCanvas();
+            updateCodeOutput();
+        };
+
+        spriteImage.onerror = function() {
+            document.body.innerHTML = '<h1 style="color: red; text-align: center;">Error: Could not load sprite sheet!</h1><p style="text-align: center;">Make sure the file "images/imageslinea-kang-spritesheet.webp" exists.</p>';
+        };
+
+        spriteImage.src = 'images/imageslinea-kang-spritesheet.webp';
+
+        function drawAllFrames() {
+            for (let i = 0; i < 4; i++) {
+                const canvas = document.getElementById(`canvas${i}`);
+                const ctx = canvas.getContext('2d');
+                
+                // Clear canvas
+                ctx.fillStyle = '#34495e';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                if (imageLoaded) {
+                    // Calculate position in 2x2 grid
+                    // Frame layout: [0:Idle][1:Jump]
+                    //               [2:Run1][3:Run2]
+                    const col = i % 2; // 0 or 1 (left or right)
+                    const row = Math.floor(i / 2); // 0 or 1 (top or bottom)
+                    const sourceX = col * frameWidth;
+                    const sourceY = row * frameHeight;
+                    
+                    ctx.drawImage(
+                        spriteImage,
+                        sourceX, sourceY, frameWidth, frameHeight,
+                        10, 10, 100, 100
+                    );
+                }
+            }
+        }
+
+        function updateMapping() {
+            frameMapping.idle = parseInt(document.getElementById('idleFrame').value);
+            frameMapping.jump = parseInt(document.getElementById('jumpFrame').value);
+            frameMapping.run1 = parseInt(document.getElementById('run1Frame').value);
+            frameMapping.run2 = parseInt(document.getElementById('run2Frame').value);
+            
+            // Update the mapping display
+            document.getElementById('mapping0').textContent = getFrameUsage(0);
+            document.getElementById('mapping1').textContent = getFrameUsage(1);
+            document.getElementById('mapping2').textContent = getFrameUsage(2);
+            document.getElementById('mapping3').textContent = getFrameUsage(3);
+            
+            updateTestCanvas();
+            updateCodeOutput();
+        }
+
+        function getFrameUsage(frameIndex) {
+            const usages = [];
+            if (frameMapping.idle === frameIndex) usages.push('Idle');
+            if (frameMapping.jump === frameIndex) usages.push('Jumping');
+            if (frameMapping.run1 === frameIndex) usages.push('Running 1');
+            if (frameMapping.run2 === frameIndex) usages.push('Running 2');
+            return usages.length > 0 ? usages.join(', ') : 'Unused';
+        }
+
+        function testState(state) {
+            currentTestState = state;
+            
+            // Update button states
+            document.querySelectorAll('.controls button').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(state + 'Btn').classList.add('active');
+            
+            if (state === 'run') {
+                if (!animationRunning) {
+                    animationRunning = true;
+                    animateRunning();
+                }
+            } else {
+                animationRunning = false;
+            }
+            
+            updateTestCanvas();
+        }
+
+        function animateRunning() {
+            if (!animationRunning || currentTestState !== 'run') return;
+            
+            const currentTime = Date.now();
+            if (currentTime - lastFrameTime > 300) {
+                runningFrame = (runningFrame + 1) % 2;
+                lastFrameTime = currentTime;
+                updateTestCanvas();
+            }
+            
+            requestAnimationFrame(animateRunning);
+        }
+
+        function toggleDirection() {
+            facingRight = !facingRight;
+            updateTestCanvas();
+        }
+
+        function updateTestCanvas() {
+            const canvas = document.getElementById('testCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Clear canvas
+            ctx.fillStyle = '#34495e';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            if (!imageLoaded) return;
+            
+            // Determine which frame to show
+            let currentFrame;
+            switch (currentTestState) {
+                case 'idle':
+                    currentFrame = frameMapping.idle;
+                    break;
+                case 'jump':
+                    currentFrame = frameMapping.jump;
+                    break;
+                case 'run':
+                    currentFrame = runningFrame === 0 ? frameMapping.run1 : frameMapping.run2;
+                    break;
+            }
+            
+            // Calculate position in 2x2 grid
+            const col = currentFrame % 2;
+            const row = Math.floor(currentFrame / 2);
+            const sourceX = col * frameWidth;
+            const sourceY = row * frameHeight;
+            const charX = 150;
+            const charY = 50;
+            const charWidth = 100;
+            const charHeight = 100;
+            
+            ctx.save();
+            
+            if (facingRight) {
+                ctx.drawImage(
+                    spriteImage,
+                    sourceX, sourceY, frameWidth, frameHeight,
+                    charX, charY, charWidth, charHeight
+                );
+            } else {
+                ctx.translate(charX + charWidth, charY);
+                ctx.scale(-1, 1);
+                ctx.drawImage(
+                    spriteImage,
+                    sourceX, sourceY, frameWidth, frameHeight,
+                    0, 0, charWidth, charHeight
+                );
+            }
+            
+            ctx.restore();
+            
+            // Draw state info
+            ctx.fillStyle = 'white';
+            ctx.font = '16px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(`State: ${currentTestState.toUpperCase()}`, canvas.width / 2, 30);
+            ctx.fillText(`Frame: ${currentFrame + 1} (Index ${currentFrame})`, canvas.width / 2, canvas.height - 20);
+            ctx.fillText(`Direction: ${facingRight ? 'Right' : 'Left'}`, canvas.width / 2, canvas.height - 5);
+        }
+
+        function updateCodeOutput() {
+            const code = `// Updated updateSpriteAnimation() method:
+updateSpriteAnimation() {
+    const currentTime = Date.now();
+    
+    // Determine which frame to show based on player state
+    if (this.isJumping) {
+        // Frame for jumping
+        this.currentSpriteFrame = ${frameMapping.jump};
+    } else if (this.isWalking) {
+        // Alternate between running frames
+        if (currentTime - this.lastAnimationTime > 200) {
+            this.runningFrameCounter++;
+            this.currentSpriteFrame = this.runningFrameCounter % 2 === 0 ? ${frameMapping.run1} : ${frameMapping.run2};
+            this.lastAnimationTime = currentTime;
+        }
+    } else {
+        // Frame for idle
+        this.currentSpriteFrame = ${frameMapping.idle};
+        this.runningFrameCounter = 0;
+    }
+}`;
+            
+            document.getElementById('codeOutput').textContent = code;
+        }
+
+        // Initialize
+        updateMapping();
+    </script>
+</body>
+</html> 
