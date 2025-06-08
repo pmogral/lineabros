@@ -184,8 +184,7 @@ The game will automatically prompt you to add Linea Mainnet, but you can also ad
 4. Test thoroughly
 5. Submit a pull request
 
-## 📄 License
-This project is licensed under the MIT License.
+
 
 ## 🆘 Troubleshooting
 
